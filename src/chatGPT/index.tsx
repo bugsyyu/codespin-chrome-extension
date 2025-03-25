@@ -20,9 +20,11 @@ function addSyncButtonToDOM(preElement: HTMLElement) {
     return;
   }
 
-  const copyButtonContainer = preElement.querySelector(
-    "div > div > div > span > button"
-  )?.parentElement?.parentElement;
+  // Look for copy button container - trying multiple selectors to increase compatibility
+  const copyButtonContainer = 
+    preElement.querySelector("div > div > div > span > button")?.parentElement?.parentElement ||
+    preElement.querySelector("div[class*='flex'] button[class*='copy']")?.closest("div[class*='flex']") ||
+    preElement.querySelector("button[aria-label*='Copy']")?.closest("div");
 
   if (copyButtonContainer) {
     const syncButton = createDOMElement(<codespin-chatgpt-sync-button />);
@@ -51,23 +53,55 @@ async function attachSyncButton() {
 // This needs to run only once because the textbox is created only once.
 async function attachInboundButton() {
   if (!document.querySelector("codespin-chatgpt-inbound-button")) {
-    const composer = document.getElementById("composer-background");
-    if (!composer) return;
+    // Try multiple possible selectors to find the message input area
+    const possibleSelectors = [
+      "#composer-background", // Original selector
+      "form[class*='stretch']", // Common pattern in recent versions
+      "div[data-testid='text-input-box']", // By test ID
+      "div[class*='text-input']", // By class name pattern
+      "textarea[placeholder*='Send a message']" // Direct textarea
+    ];
 
-    // Get second div child of composer
-    const secondDiv = composer.children[1];
-    if (!secondDiv) return;
+    let targetElement = null;
+    
+    // Try each selector
+    for (const selector of possibleSelectors) {
+      const element = document.querySelector(selector);
+      if (element) {
+        targetElement = element;
+        break;
+      }
+    }
 
-    // Get first div of that div
-    const targetDiv = secondDiv.children[0];
-    if (!targetDiv) return;
+    if (!targetElement) return;
+
+    // Find appropriate container for our button
+    let targetContainer = null;
+    
+    // If we found the form or a div container
+    if (targetElement.tagName === 'FORM') {
+      // Look for button/toolbar container in form
+      targetContainer = targetElement.querySelector("div[class*='button']") || 
+                        targetElement.querySelector("div[class*='toolbar']") ||
+                        targetElement.querySelector("div[class*='stretch']");
+    } else if (targetElement.tagName === 'DIV') {
+      // Use the element itself or look for a child container
+      targetContainer = targetElement.querySelector("div[class*='flex']") || targetElement;
+    } else if (targetElement.tagName === 'TEXTAREA') {
+      // Find parent container for textarea
+      targetContainer = targetElement.closest("div[class*='flex']") || 
+                        targetElement.closest("div[class*='relative']");
+    }
+
+    // Fallback to composer if available or use the target element
+    targetContainer = targetContainer || document.getElementById("composer-background") || targetElement;
 
     const inboundButton = createDOMElement(
       <codespin-chatgpt-inbound-button></codespin-chatgpt-inbound-button>
     );
 
-    // Append as last element
-    targetDiv.appendChild(inboundButton as Element);
+    // Append as last element or at beginning based on layout
+    targetContainer.appendChild(inboundButton as Element);
   }
 }
 
@@ -76,6 +110,8 @@ async function attachInboundButton() {
  * and observers.
  */
 export function initializeCodeSpin() {
+  console.log("CodeSpin: Initializing for ChatGPT...");
+  
   // Initial attachment of CodeSpin links
   attachSyncButton();
 

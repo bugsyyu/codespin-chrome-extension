@@ -5,7 +5,9 @@
   "type": "module",
   "scripts": {
     "build": "vite build",
-    "package": "./package.sh"
+    "build:win": "powershell -ExecutionPolicy Bypass -InputFormat Text -OutputFormat Text -File .\\build.ps1",
+    "package": "./package.sh",
+    "package:win": "powershell -ExecutionPolicy Bypass -InputFormat Text -OutputFormat Text -File .\\package.ps1"
   },
   "dependencies": {
     "@types/diff": "^7.0.0",

@@ -38,13 +38,89 @@ Install deps. Note that you need Node.JS.
 npm i
 ```
 
+### Linux/macOS
+
 Build it.
 
 ```sh
 ./build.sh
 ```
 
-Now go to Chrome > Extensions > Manage Extensions, and click on "Load Unpacked".
-Point it at the `codespin-chrome-extension` directory.
+Package it (optional).
 
-Enjoy.
+```sh
+./package.sh output.zip
+```
+
+### Windows
+
+Build it.
+
+```sh
+npm run build:win
+```
+
+Or use the batch file for both building and packaging:
+
+```sh
+build-package.bat output.zip
+```
+
+Alternatively, you can package separately:
+
+```sh
+npm run package:win output.zip
+```
+
+### Loading the Extension in Chrome
+
+After building the extension, follow these steps to install it in Chrome:
+
+1. Open Chrome web browser
+2. Type `chrome://extensions/` in the address bar and press Enter
+3. Enable "Developer mode" by toggling the switch in the top-right corner
+4. Click on "Load Unpacked" button that appears
+5. Navigate to the `codespin-chrome-extension` directory (the main project folder, not the dist folder)
+6. Select the folder and click "Open"
+7. The extension should now appear in your list of installed extensions
+
+### Using the Extension
+
+Once installed, you can use the extension with ChatGPT and Claude:
+
+1. Go to [ChatGPT](https://chat.openai.com/) or [Claude](https://claude.ai/)
+2. Look for the CodeSpin.AI icon in the interface
+3. Click on the icon to select files from your local project
+4. The selected files will be included in your prompt
+5. When AI suggests code changes, you can sync them back to your project
+
+Note: When using the extension for the first time, you may be prompted to grant file system access permissions.
+
+## Troubleshooting
+
+### Windows
+
+If you encounter an error about PowerShell execution policy, you may need to allow script execution:
+
+```powershell
+Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process
+```
+
+Then run the build or package commands again.
+
+### Extension Not Working
+
+If the extension does not appear in ChatGPT or Claude:
+
+1. Make sure you're using a Chromium-based browser (Chrome, Edge, Brave, etc.)
+2. Check that the extension is enabled in your extensions page
+3. Try refreshing the ChatGPT or Claude page
+4. Make sure you're using the correct URLs: `https://chat.openai.com/` or `https://claude.ai/`
+
+### Permissions Issues
+
+If you encounter issues with file access:
+
+1. In Chrome extensions page, click on the "Details" of the CodeSpin extension
+2. Go to "Site access" and make sure appropriate permissions are granted
+3. You may need to re-authorize file access by clicking on the extension icon again

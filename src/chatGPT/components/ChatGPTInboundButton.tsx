@@ -48,11 +48,56 @@ export class ChatGPTInboundButton extends HTMLElement {
   async handleFileSelection(selectedFiles: string[]) {
     try {
       const prompt = await fromFileSelection(selectedFiles);
-      const editor = document.querySelector(
-        "#prompt-textarea"
-      ) as HTMLDivElement;
+      
+      // Try multiple possible selectors to find the editor
+      const editorSelectors = [
+        "#prompt-textarea", // Original selector
+        "textarea[placeholder*='Send a message']", // Direct textarea
+        "div[contenteditable='true']", // Contenteditable div
+        "div[role='textbox']", // Role textbox
+        "form[class*='stretch'] textarea" // Form textarea
+      ];
+      
+      let editor: HTMLTextAreaElement | HTMLDivElement | Element | null = null;
+      
+      // Try each selector
+      for (const selector of editorSelectors) {
+        const element = document.querySelector(selector);
+        if (element) {
+          editor = element;
+          break;
+        }
+      }
+      
       if (editor) {
-        insertHTML(editor, prompt);
+        // Handle different types of input elements
+        if (editor instanceof HTMLTextAreaElement) {
+          // For textarea elements
+          const originalValue = editor.value;
+          editor.value = originalValue + prompt;
+          editor.dispatchEvent(new Event('input', { bubbles: true }));
+          editor.focus();
+        } else {
+          // For contenteditable or other elements
+          try {
+            insertHTML(editor as HTMLDivElement, prompt);
+          } catch (e) {
+            console.error("Error inserting HTML:", e);
+            // Fallback: try to set innerText if insertHTML fails
+            if ('innerHTML' in editor) {
+              (editor as HTMLElement).innerHTML += prompt;
+            } else if ('textContent' in editor) {
+              (editor as Node).textContent += prompt;
+            }
+          }
+          
+          // Only call focus if it's available on the element
+          if ('focus' in editor && typeof (editor as HTMLElement).focus === 'function') {
+            (editor as HTMLElement).focus();
+          }
+        }
+      } else {
+        console.error("Could not find text editor element");
       }
     } catch (error) {
       console.error("Error loading file contents:", error);
